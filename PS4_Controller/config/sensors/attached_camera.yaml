@@ -1,6 +1,6 @@
 name: "gripper_camera"
 config:
-  class_dir: "../ark_realsense/intel_realsense" # Directory where the class is located
+  class_dir: "../../ark_realsense/intel_realsense" # Directory where the class is located
   type: "Camera"
   camera_type: "attached"
   frequency: 30        # defaulyt 30

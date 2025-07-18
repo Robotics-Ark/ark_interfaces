@@ -2,7 +2,7 @@ name: "Franka"
 config:
   source: "urdf"
   urdf_path: "panda_with_gripper.urdf"
-  class_dir: "../ark_robots/ark_franka/franka_panda"
+  class_dir: "../../ark_robots/ark_franka/franka_panda"
   frequency: 10 # default is 240Hz
   merge_fixed_links: False
   ee_index: 11
