@@ -22,7 +22,7 @@ class PS4Controller(BaseNode):
             )
             exit()
 
-        log.ok(f"🎮 Connected to: {self.controller.name} at {self.controller.path}")
+        log.ok(f"Connected to: {self.controller.name} at {self.controller.path}")
 
         self.button_map = {
             ecodes.BTN_SOUTH: "Cross (X)",
@@ -88,7 +88,7 @@ class PS4Controller(BaseNode):
     def find_controller(self):
         """Find the PS4 controller dynamically."""
         devices = [InputDevice(path) for path in list_devices()]
-        print("🔍 Scanning available input devices...")
+        print("Scanning available input devices...")
 
         for device in devices:
             print(f" {device.path} - {device.name}")
