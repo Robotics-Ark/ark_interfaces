@@ -1,6 +1,6 @@
 name: "camera"
 config:
-  class_dir: "../../ark_realsense/intel_realsense"  # Directory where the class is located
+  class_dir: "../../../ark_realsense/intel_realsense"  # Directory where the class is located
   type: "Camera"
   camera_type: "fixed"
   frequency: 30        # defaulyt 30

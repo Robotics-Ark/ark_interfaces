@@ -7,7 +7,7 @@ from arktypes import ps4_controller_state_t
 from ark.tools.log import log
 from ark.client.comm_infrastructure.instance_node import InstanceNode
 
-URDF_PATH = "../../ark_robots/ark_franka/franka_panda/panda_with_gripper.urdf"
+URDF_PATH = "../../../ark_robots/ark_franka/franka_panda/panda_with_gripper.urdf"
 EE_IDX = 11
 
 class ExpertPolicyPS4(InstanceNode):
