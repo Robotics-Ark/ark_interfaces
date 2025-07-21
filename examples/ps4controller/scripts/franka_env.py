@@ -6,28 +6,26 @@ import random
 
 class FrankaEnv(ArkEnv):
     """
-    Franka Environment for the Franka robot.
-    This environment is designed to work with the Franka robot in a simulation or real-world setting.
-    It inherits from ArkEnv, which provides the basic structure and functionality for ARK environments.
+    FrankaEnv defines an environment interface for the Franka robot using the ARK framework.
+
+    It supports simulation or real-world operation and provides observation and action channel
+    packing/unpacking, reward logic, episode termination logic, and object reset functionality.
     """
 
     def __init__(self, config=None, sim=True):
         """
-        Initialize the FrankaEnv environment.
+        Initializes the Franka environment.
 
         Args:
-            config (dict, optional): Configuration dictionary for the environment. 
-                This may include parameters such as control frequency, robot setup, etc.
-            sim (bool, optional): Whether the environment is running in simulation. 
-                If False, assumes real-world deployment. Defaults to True.
-
+            config (dict, optional): Global configuration dictionary for environment setup.
+            sim (bool, optional): If True, runs in simulation mode. If False, runs with a real robot.
         """
         environment_name = "Franka_Enviroment"
         action_space = {
             "Franka/joint_group_command/sim": joint_group_command_t,
         }
         observation_space = {
-            "Franka/joint_states/sim": joint_state_t,  # Assuming joint states are also packed in a similar way
+            "Franka/joint_states/sim": joint_state_t,
             "camera/rgbd/sim": rgbd_t,
             "gripper_camera/rgbd/sim": rgbd_t,
         }
@@ -42,10 +40,13 @@ class FrankaEnv(ArkEnv):
 
     def action_packing(self, action):
         """
-        Pack the action into a message format suitable for LCM.
+        Converts a raw action into a format suitable for communication via LCM.
 
-        :param action: The action to be packed.
-        :return: A dictionary containing the packed action.
+        Args:
+            action (list or array): The raw joint command.
+
+        Returns:
+            dict: Dictionary containing the packed joint command message.
         """
         return {
             "Franka/joint_group_command/sim": pack.joint_group_command(
@@ -56,10 +57,13 @@ class FrankaEnv(ArkEnv):
 
     def observation_unpacking(self, observation):
         """
-        Unpack the observation from the message format.
+        Unpacks the observation data from incoming messages.
 
-        :param observation: The observation to be unpacked.
-        :return: The unpacked observation.
+        Args:
+            observation (dict): Raw observation data received from the environment.
+
+        Returns:
+            dict: Dictionary with parsed joint states and RGB-D data from both fixed and gripper cameras.
         """
         joint_states = unpack.joint_state(observation["Franka/joint_states/sim"])
         camera_rgb, camera_depth = unpack.rgbd(observation["camera/rgbd/sim"])
@@ -77,35 +81,43 @@ class FrankaEnv(ArkEnv):
 
     def terminated_truncated_info(self, state, action, next_state):
         """
-        Check if the episode is terminated or truncated.
+        Determines if the current episode should terminate or be truncated.
 
-        :param observation: The current observation.
-        :return: A tuple containing termination status, truncation status, and additional info.
+        Args:
+            state (dict): Current state of the environment.
+            action (list): Action taken at the current step.
+            next_state (dict): Resulting state after taking the action.
+
+        Returns:
+            tuple: (terminated (bool), truncated (bool), info (dict or None))
         """
-        # Implement your logic to determine if the episode is terminated or truncated
+        # Logic can be customized based on task-specific conditions
         return False, False, None
 
     def reward(self, state, action, next_state):
         """
-        Calculate the reward based on the current state, action, and next state.
+        Computes the reward for a transition from state to next_state using the given action.
 
-        :param state: The current state.
-        :param action: The action taken.
-        :param next_state: The next state after taking the action.
-        :return: The calculated reward.
+        Args:
+            state (dict): Current state of the environment.
+            action (list): Action taken.
+            next_state (dict): Resulting state after taking the action.
+
+        Returns:
+            float: Reward value.
         """
-        # Implement your reward calculation logic here
+        # Placeholder reward logic; override in subclasses or extensions
         return 0.0
 
     def reset_objects(self):
         """
-        Reset the objects in the environment.
-        This method is called when the environment is reset.
+        Resets objects in the environment to randomized starting positions.
+
+        This is typically called at the beginning of each episode.
         """
-        # Implement your logic to reset objects in the environment
         print("Resetting objects in the Franka environment.")
         self.reset_component("Franka")
-        # Randomly reset the positions of the objects
+
         self.reset_component(
             "BluePlate",
             base_position=[random.uniform(-0.2, -0.15), random.uniform(0.1, 0.2), 0.7],

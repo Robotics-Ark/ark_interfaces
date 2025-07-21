@@ -10,14 +10,35 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 
 
-
-
 class PS4Controller(BaseNode):
+    """
+    PS4Controller reads events from a connected PS4 controller (via USB or Bluetooth) and publishes
+    its state using LCM messages at a fixed frequency.
+
+    It handles button states, axis positions, and ensures that noisy initial activations are filtered
+    out using a lock mechanism before data is broadcast.
+
+    Attributes:
+        controller (InputDevice): The detected PS4 controller device.
+        button_map (dict): Mapping from evdev key codes to button labels.
+        axis_map (dict): Mapping from evdev axis codes to axis labels.
+        button_states (dict): Current state of each PS4 button (pressed or not).
+        axis_states (dict): Current value of each joystick and trigger axis.
+        lock (bool): Whether controller input is currently ignored due to high initial activations.
+        pub (Publisher): Publisher for sending controller state as `ps4_controller_state_t`.
+    """
 
     def __init__(self, node_name: str, global_config=None):
+        """
+        Initializes the PS4Controller node, detects the connected controller,
+        maps inputs, and sets up publishers and steppers.
+
+        Args:
+            node_name (str): Name of the node instance.
+            global_config (dict or None): Optional configuration parameters.
+        """
         super().__init__(node_name, global_config)
 
-        # Find the correct controller device
         self.controller = self.find_controller()
         if self.controller is None:
             log.error(
@@ -39,10 +60,11 @@ class PS4Controller(BaseNode):
             ecodes.BTN_THUMBL: "L3 (Left Stick Click)",
             ecodes.BTN_THUMBR: "R3 (Right Stick Click)",
             ecodes.BTN_MODE: "PS Button",
-            0x14A: "Touchpad Click",  # Custom mapping for touchpad
+            0x14A: "Touchpad Click",
         }
+
         self.axis_map = {
-            ecodes.ABS_X: "Left Stick - Horizontal",  #  [0, 255], neutral at 128
+            ecodes.ABS_X: "Left Stick - Horizontal",
             ecodes.ABS_Y: "Left Stick - Vertical",
             ecodes.ABS_RX: "Right Stick - Horizontal",
             ecodes.ABS_RY: "Right Stick - Vertical",
@@ -51,48 +73,26 @@ class PS4Controller(BaseNode):
             ecodes.ABS_HAT0X: "D-Pad Horizontal",
             ecodes.ABS_HAT0Y: "D-Pad Vertical",
         }
-        self.button_states = {
-            "Cross (X)": False,
-            "Circle (O)": False,
-            "Triangle": False,
-            "Square": False,
-            "L1": False,
-            "R1": False,
-            "Share": False,
-            "Options": False,
-            "L3 (Left Stick Click)": False,
-            "R3 (Right Stick Click)": False,
-            "PS Button": False,
-            "Touchpad Click": False,
-        }
-        self.axis_states = {
-            "Left Stick - Horizontal": 0,  # left [0, 255] right, neutral at 128
-            "Left Stick - Vertical": 0,  # up [0, 255] down, neutral at 128
-            "Right Stick - Horizontal": 0,  # left [0, 255] right, neutral at 128
-            "Right Stick - Vertical": 0,  # up [0, 255] down, neutral at 128
-            "L2 Trigger": 0,
-            "R2 Trigger": 0,
-            "D-Pad Horizontal": 0,
-            "D-Pad Vertical": 0,
-        }
 
-        # ! IMPORTANT !
-        # in some cases, the controller would initially publish
-        # high button activations for some reason.
-        # In this implementation, we ignore any input until we observed a state
-        # where all the activations are low.
-        self.lock = True
+        self.button_states = {name: False for name in self.button_map.values()}
+        self.axis_states = {name: 0 for name in self.axis_map.values()}
+
+        self.lock = True  # Ignore events until all activations are low
 
         self.pub = self.create_publisher("ps4_controller", ps4_controller_state_t)
 
-        self.create_stepper(120, self.event_callback)  # read controller events
-        self.create_stepper(60, self.step)  # publish controller state
+        self.create_stepper(120, self.event_callback)  # Event reader
+        self.create_stepper(60, self.step)  # State publisher
 
     def find_controller(self):
-        """Find the PS4 controller dynamically."""
+        """
+        Scans for connected input devices and returns the PS4 controller if found.
+
+        Returns:
+            InputDevice or None: The connected PS4 controller, or None if not found.
+        """
         devices = [InputDevice(path) for path in list_devices()]
         print("Scanning available input devices...")
-
         for device in devices:
             print(f" {device.path} - {device.name}")
             if "Wireless Controller" in device.name or "Sony" in device.name:
@@ -100,28 +100,27 @@ class PS4Controller(BaseNode):
         return None
 
     def pack(self):
-        # Initialize the LCM message
+        """
+        Packs the current button and axis states into an `ps4_controller_state_t` LCM message.
+
+        Returns:
+            ps4_controller_state_t: The packed controller state message.
+        """
         msg = ps4_controller_state_t()
 
-        # Pack button states into the LCM message (booleans will be 0 for False, 1 for True)
-        msg.cross_x = 1 if self.button_states["Cross (X)"] else 0
-        msg.circle_o = 1 if self.button_states["Circle (O)"] else 0
-        msg.triangle = 1 if self.button_states["Triangle"] else 0
-        msg.square = 1 if self.button_states["Square"] else 0
-        msg.l1 = 1 if self.button_states["L1"] else 0
-        msg.r1 = 1 if self.button_states["R1"] else 0
-        msg.share = 1 if self.button_states["Share"] else 0
-        msg.options = 1 if self.button_states["Options"] else 0
-        msg.l3_left_stick_click = (
-            1 if self.button_states["L3 (Left Stick Click)"] else 0
-        )
-        msg.r3_right_stick_click = (
-            1 if self.button_states["R3 (Right Stick Click)"] else 0
-        )
-        msg.ps_button = 1 if self.button_states["PS Button"] else 0
-        msg.touchpad_click = 1 if self.button_states["Touchpad Click"] else 0
+        msg.cross_x = int(self.button_states["Cross (X)"])
+        msg.circle_o = int(self.button_states["Circle (O)"])
+        msg.triangle = int(self.button_states["Triangle"])
+        msg.square = int(self.button_states["Square"])
+        msg.l1 = int(self.button_states["L1"])
+        msg.r1 = int(self.button_states["R1"])
+        msg.share = int(self.button_states["Share"])
+        msg.options = int(self.button_states["Options"])
+        msg.l3_left_stick_click = int(self.button_states["L3 (Left Stick Click)"])
+        msg.r3_right_stick_click = int(self.button_states["R3 (Right Stick Click)"])
+        msg.ps_button = int(self.button_states["PS Button"])
+        msg.touchpad_click = int(self.button_states["Touchpad Click"])
 
-        # Pack axis states (int16, range from 0 to 255)
         msg.left_stick_horizontal = self.axis_states["Left Stick - Horizontal"]
         msg.left_stick_vertical = self.axis_states["Left Stick - Vertical"]
         msg.right_stick_horizontal = self.axis_states["Right Stick - Horizontal"]
@@ -134,9 +133,12 @@ class PS4Controller(BaseNode):
         return msg
 
     def step(self):
+        """
+        Periodically publishes the controller state as an LCM message.
 
+        It ensures all axes are at rest (low activations) before unlocking the device.
+        """
         if self.lock:
-            # check if activations are low
             activations = np.array(
                 [
                     self.axis_states["Left Stick - Horizontal"] - 128,
@@ -148,42 +150,56 @@ class PS4Controller(BaseNode):
                 ]
             )
             print(activations)
-            activations = np.abs(activations)
             if np.max(np.abs(activations)) >= 10:
                 log.warn(
                     "High initial activations detected, controller is locked. Please move the joysticks and triggers."
                 )
                 return
-            # if activations low, unlock the controller
             else:
                 self.lock = False
                 return
-        # Pack the controller state into the LCM message
+
         msg = self.pack()
-        # Publish the message
         self.pub.publish(msg)
         log.info(f"Published controller state")
 
     def event_callback(self):
+        """
+        Reads raw events from the controller in a non-blocking loop.
+        Categorizes each event and dispatches to the appropriate handler.
+        """
         for event in self.controller.read_loop():
-            if event.type == ecodes.EV_KEY:  # Button Presses
+            if event.type == ecodes.EV_KEY:
                 self.handle_button(event)
-            elif event.type == ecodes.EV_ABS:  # Analog Sticks & Triggers
+            elif event.type == ecodes.EV_ABS:
                 self.handle_axis(event)
             elif event.type == ecodes.EV_SYN:
                 continue  # Ignore synchronization events
 
     def handle_button(self, event):
-        """Handle button press and release events."""
-        self.button_states[self.button_map.get(event.code, event.code)] = bool(
-            event.value
-        )
+        """
+        Updates button state based on key press/release event.
+
+        Args:
+            event (InputEvent): Event object containing button press info.
+        """
+        button_name = self.button_map.get(event.code, event.code)
+        self.button_states[button_name] = bool(event.value)
 
     def handle_axis(self, event):
-        """Handle analog stick and trigger movements."""
-        self.axis_states[self.axis_map.get(event.code, event.code)] = event.value
+        """
+        Updates axis state based on joystick or trigger movement.
+
+        Args:
+            event (InputEvent): Event object containing axis value.
+        """
+        axis_name = self.axis_map.get(event.code, event.code)
+        self.axis_states[axis_name] = event.value
 
 
 if __name__ == "__main__":
-    CONFIG_PATH = Path(__file__).parent.parent / "examples/ps4controller/config/global_config.yaml"
+    CONFIG_PATH = (
+        Path(__file__).parent.parent
+        / "examples/ps4controller/config/global_config.yaml"
+    )
     main(PS4Controller, "ps4_controller", CONFIG_PATH)

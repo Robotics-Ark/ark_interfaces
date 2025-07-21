@@ -2,35 +2,64 @@ import numpy as np
 import pybullet as p
 from pybullet_utils.bullet_client import BulletClient
 from scipy.spatial.transform import Rotation as R
+from pathlib import Path
 
 from arktypes import ps4_controller_state_t
 from ark.tools.log import log
 from ark.client.comm_infrastructure.instance_node import InstanceNode
 
-URDF_PATH = "../../../ark_robots/ark_franka/franka_panda/panda_with_gripper.urdf"
+URDF_PATH = (
+    Path(__file__).parent.parent.parent
+    / "ark_robots/ark_franka/franka_panda/panda_with_gripper.urdf"
+)
 EE_IDX = 11
 
 
 class ExpertPolicyPS4(InstanceNode):
+    """
+    ExpertPolicyPS4 translates PS4 controller inputs into motion commands for a Franka Panda robot
+    using inverse kinematics and a PyBullet simulation. It is primarily used for data collection
+    and teleoperation.
+
+    Attributes:
+        client (BulletClient): PyBullet client instance.
+        robot_id (int): Identifier for the loaded robot in the PyBullet environment.
+        last_q (list): Most recent joint configuration.
+        home_position (list): Default joint configuration.
+        damping (list): Damping coefficients for inverse kinematics.
+        unlocked (bool): Whether controller input is currently allowed to affect the robot.
+        button_states (dict): Mapping of PS4 buttons to their current pressed state.
+        axis_states (dict): Mapping of PS4 joystick/trigger axes to their values.
+        lower_limits, upper_limits, joint_ranges (list): Joint limits and ranges for IK solving.
+    """
 
     def __init__(self, node_name: str, global_config=None):
+        """
+        Initializes the ExpertPolicyPS4 node.
 
+        Args:
+            node_name (str): Name of the node.
+            global_config (dict or None): Optional global configuration dictionary.
+        """
         super().__init__(node_name, global_config)
         self.client = self._connect_pybullet()
-        ## check the baseposition here
+
         self.robot_id = self.client.loadURDF(
             URDF_PATH,
             basePosition=[-0.55, 0, 0.6],
             baseOrientation=[0, 0, 0, 1],
             useFixedBase=True,
-        )  ## remove merge links
+        )
+
         self.get_joint_limits()
+
         self.home_position = [0, -0.785, 0, -2.356, 0, 1.571, 0.785, 0, 0, 0, 0, 0]
         self.damping = [10, 10, 10, 10, 10, 10, 10, 0.1, 0.1, 0.1, 0.1, 10]
         self.last_q = self.home_position
+
         self.initial_ee_position, self.initial_ee_orientation = self.forward_kinematics(
             self.home_position
-        )  # orientation returns quaternion x y z w
+        )
 
         self.unlocked = False
 
@@ -48,56 +77,57 @@ class ExpertPolicyPS4(InstanceNode):
             "PS Button": False,
             "Touchpad Click": False,
         }
+
         self.axis_states = {
-            "Left Stick - Horizontal": 0,  # left [0, 255] right, neutral at 128
-            "Left Stick - Vertical": 0,  # up [0, 255] down, neutral at 128
-            "Right Stick - Horizontal": 0,  # left [0, 255] right, neutral at 128
-            "Right Stick - Vertical": 0,  # up [0, 255] down, neutral at 128
+            "Left Stick - Horizontal": 0,
+            "Left Stick - Vertical": 0,
+            "Right Stick - Horizontal": 0,
+            "Right Stick - Vertical": 0,
             "L2 Trigger": 0,
             "R2 Trigger": 0,
             "D-Pad Horizontal": 0,
             "D-Pad Vertical": 0,
         }
 
-        # listen to controller commands
         self.create_subscriber(
             "ps4_controller", ps4_controller_state_t, self.callback_controller
         )
 
     def _connect_pybullet(self):
+        """
+        Establishes a PyBullet client connection in DIRECT mode (no GUI).
+
+        Returns:
+            BulletClient: The connected PyBullet client.
+        """
         connection_mode_str = "DIRECT"
         connection_mode = getattr(p, connection_mode_str)
         return BulletClient(connection_mode)
 
     def get_joint_limits(self):
+        """
+        Retrieves and stores the lower/upper joint limits and joint ranges from the robot model.
+        """
         num_joints = p.getNumJoints(self.robot_id)
         self.lower_limits = []
         self.upper_limits = []
         self.joint_ranges = []
-        # Loop over each joint and print its limits
+
         for joint_index in range(num_joints):
             joint_info = self.client.getJointInfo(self.robot_id, joint_index)
-            lower_limit = joint_info[8]
-            upper_limit = joint_info[9]
-            self.lower_limits.append(lower_limit)
-            self.upper_limits.append(upper_limit)
-            self.joint_ranges.append(upper_limit - lower_limit)
-
-    def get_data_store_decision(self) -> bool:
-        while (self.button_states["Square"] is False) and (
-            self.button_states["Circle (O)"] is False
-        ):
-            log.warn(
-                "Do you want to store the last rollout? Press Square to store or O to dismiss."
-            )
-
-        if self.button_states["Square"]:
-            return True
-        elif self.button_states["Circle (O)"]:
-            return False
+            self.lower_limits.append(joint_info[8])
+            self.upper_limits.append(joint_info[9])
+            self.joint_ranges.append(joint_info[9] - joint_info[8])
 
     def callback_controller(self, t, channel_name, msg):
+        """
+        Callback function to update internal button and axis states from the PS4 controller input.
 
+        Args:
+            t (float): Timestamp of the message.
+            channel_name (str): Channel name.
+            msg (ps4_controller_state_t): PS4 controller message.
+        """
         self.button_states["Cross (X)"] = msg.cross_x == 1
         self.button_states["Circle (O)"] = msg.circle_o == 1
         self.button_states["Triangle"] = msg.triangle == 1
@@ -121,22 +151,38 @@ class ExpertPolicyPS4(InstanceNode):
         self.axis_states["D-Pad Vertical"] = msg.dpad_vertical
 
     def forward_kinematics(self, q):
+        """
+        Computes forward kinematics to determine the end-effector position and orientation.
+
+        Args:
+            q (list): Joint configuration.
+
+        Returns:
+            tuple: End-effector position (np.array) and orientation as quaternion (np.array).
+        """
         for joint_index, pos in enumerate(q):
             self.client.resetJointState(self.robot_id, joint_index, pos)
 
         link_states = self.client.getLinkState(self.robot_id, EE_IDX)
-        end_effector_position = np.array(link_states[4])
-        end_effector_orientation = np.array(link_states[5])
-
-        return end_effector_position, end_effector_orientation
+        return np.array(link_states[4]), np.array(link_states[5])
 
     def inverse_kinematics(self, ee_pos, ee_orn):
-        # check if lists
+        """
+        Solves inverse kinematics to obtain joint positions that reach a target pose.
+
+        Args:
+            ee_pos (list or np.ndarray): Target end-effector position.
+            ee_orn (list or np.ndarray): Target orientation as quaternion.
+
+        Returns:
+            list: Joint angles computed via IK.
+        """
         if not isinstance(ee_pos, list):
             ee_pos = ee_pos.tolist()
         if not isinstance(ee_orn, list):
             ee_orn = ee_orn.tolist()
-        q_new = p.calculateInverseKinematics(
+
+        return p.calculateInverseKinematics(
             bodyUniqueId=self.robot_id,
             endEffectorLinkIndex=EE_IDX,
             targetPosition=ee_pos,
@@ -148,88 +194,69 @@ class ExpertPolicyPS4(InstanceNode):
             solver=p.IK_DLS,
             jointDamping=self.damping,
         )
-        return q_new
 
     def get_action(self, q):
         """
-        You can custiomize the action based on the PS4 controller input here for the best performance.
-        The corresponding buttons are defined in the ps4controller.py file.
+        Computes the next joint configuration based on current controller input.
+
+        Args:
+            q (list): Current joint configuration.
+
+        Returns:
+            tuple:
+                new_q (list): Updated joint configuration.
+                q_gripper (float): Gripper position from trigger input.
+                save_transition (bool): Whether the action should be logged as a data point.
         """
-        # linear velocity
         v_x = -self.axis_states["D-Pad Vertical"]
         v_y = -self.axis_states["D-Pad Horizontal"]
 
-        if self.button_states["L1"]:
-            v_z = 1.0
-        elif self.button_states["R1"]:
-            v_z = -1.0
-        else:
-            v_z = 0.0
+        v_z = (
+            1.0
+            if self.button_states["L1"]
+            else -1.0 if self.button_states["R1"] else 0.0
+        )
 
-        # angular velocity
         v_roll = -(self.axis_states["Right Stick - Vertical"] - 128) / 128
-        if np.abs(v_roll) < 0.03:
-            v_roll = 0
-
         v_pitch = -(self.axis_states["Right Stick - Horizontal"] - 128) / 128
-        if np.abs(v_pitch) < 0.03:
-            v_pitch = 0
-
         v_yaw = -(self.axis_states["Left Stick - Horizontal"] - 128) / 128
-        if np.abs(v_yaw) < 0.03:
-            v_yaw = 0
 
-        # gripper position
+        v_roll = 0 if abs(v_roll) < 0.03 else v_roll
+        v_pitch = 0 if abs(v_pitch) < 0.03 else v_pitch
+        v_yaw = 0 if abs(v_yaw) < 0.03 else v_yaw
+
         q_gripper = self.axis_states["R2 Trigger"] / 255
 
-        # if any button or joy sticker was touched
-        if (
-            (v_x != 0.0 or v_y != 0.0)
-            or (v_z != 0.0)
-            or (v_roll != 0.0 and v_pitch != 0.0)
-            or (v_yaw != 0.0)
-            or (q_gripper != 0.0)
-        ):
-            if self.unlocked:
-                save_transition = True
-            else:
-                save_transition = False
+        is_moving = any([v_x, v_y, v_z, v_roll, v_pitch, v_yaw, q_gripper])
 
-            end_effector_position, end_effector_orientation = self.forward_kinematics(q)
-            ## Relative position with respect to the world frame
-            update_ee_position = np.array(end_effector_position) + np.array(
-                [v_x * 0.2, v_y * 0.2, v_z * 0.2]
-            )
-            ## Relative rotation with respect to the end effector orientation
-            current_ee_orientation_matrix = R.from_quat(
-                end_effector_orientation
-            ).as_matrix()
-            delta_ee_rotation = R.from_euler(
-                "xyz", [v_roll * 0.05, v_pitch * 0.05, v_yaw * 0.05]
-            ).as_matrix()
-            update_ee_orientation_matrix = (
-                current_ee_orientation_matrix @ delta_ee_rotation
-            )
-            update_ee_orientation = R.from_matrix(
-                update_ee_orientation_matrix
-            ).as_quat()
-            ## Conver tuple to list
+        if is_moving:
+            save_transition = self.unlocked
+            ee_pos, ee_orn = self.forward_kinematics(q)
+            update_ee_position = np.array(ee_pos) + np.array([v_x, v_y, v_z]) * 0.2
+
+            current_rot = R.from_quat(ee_orn).as_matrix()
+            delta_rot = R.from_euler("xyz", [v_roll, v_pitch, v_yaw]) * 0.1
+            update_rot = current_rot @ R.from_euler("xyz", delta_rot).as_matrix()
+            update_ee_orientation = R.from_matrix(update_rot).as_quat()
+
             new_q = list(
                 self.inverse_kinematics(
                     update_ee_position.tolist(), update_ee_orientation
                 )
             )
             self.last_q = new_q
-
         else:
-            save_transition = False  # to avoid idle statees
+            save_transition = False
             new_q = self.last_q
 
         return new_q, q_gripper, save_transition
 
     def reset(self):
+        """
+        Resets internal state to prepare for a new rollout.
+        """
         self.unlocked = False
         self.initial_ee_position, self.initial_ee_orientation = self.forward_kinematics(
             self.home_position
-        )  # orientation returns quaternion x y z w
+        )
         self.last_q = self.home_position
