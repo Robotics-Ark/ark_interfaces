@@ -8,10 +8,7 @@ from arktypes import ps4_controller_state_t
 from ark.tools.log import log
 from ark.client.comm_infrastructure.instance_node import InstanceNode
 
-URDF_PATH = (
-    Path(__file__).parent.parent.parent
-    / "ark_robots/ark_franka/franka_panda/panda_with_gripper.urdf"
-)
+URDF_PATH = "../../../ark_robots/ark_franka/franka_panda/panda_with_gripper.urdf"
 EE_IDX = 11
 
 
@@ -235,8 +232,10 @@ class ExpertPolicyPS4(InstanceNode):
             update_ee_position = np.array(ee_pos) + np.array([v_x, v_y, v_z]) * 0.2
 
             current_rot = R.from_quat(ee_orn).as_matrix()
-            delta_rot = R.from_euler("xyz", [v_roll, v_pitch, v_yaw]) * 0.1
-            update_rot = current_rot @ R.from_euler("xyz", delta_rot).as_matrix()
+            delta_rot = R.from_euler(
+                "xyz", [v_roll * 0.1, v_pitch * 0.1, v_yaw * 0.1]
+            ).as_matrix()
+            update_rot = current_rot @ delta_rot
             update_ee_orientation = R.from_matrix(update_rot).as_quat()
 
             new_q = list(
