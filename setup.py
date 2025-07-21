@@ -7,13 +7,13 @@ with open("requirements.txt", "r", encoding="utf-8") as req_file:
     requirements = req_file.read().splitlines()
 
 setup(
-    name='arkinterfaces',
+    name="arkinterfaces",
     description="Ark Interfaces",
-    version='1.0.0',
+    version="1.0.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(),  # Automatically find packages in your directory
+    packages=find_packages(),
     license="MIT License",
     packages=find_packages(),
-    install_requires=requirements
+    install_requires=requirements,
 )
