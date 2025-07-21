@@ -1,8 +1,9 @@
 from ark.client.comm_infrastructure.base_node import main
 from ark.system.simulation.simulator_node import SimulatorNode
 from ark.tools.log import log
+from pathlib import Path
 
-CONFIG_PATH = "config/global_config.yaml"
+CONFIG_PATH = Path(__file__).parent.parent / "config" / "global_config.yaml"
 
 
 class PyBulletNode(SimulatorNode):

@@ -12,7 +12,16 @@ class FrankaEnv(ArkEnv):
     """
 
     def __init__(self, config=None, sim=True):
+        """
+        Initialize the FrankaEnv environment.
 
+        Args:
+            config (dict, optional): Configuration dictionary for the environment. 
+                This may include parameters such as control frequency, robot setup, etc.
+            sim (bool, optional): Whether the environment is running in simulation. 
+                If False, assumes real-world deployment. Defaults to True.
+
+        """
         environment_name = "Franka_Enviroment"
         action_space = {
             "Franka/joint_group_command/sim": joint_group_command_t,
