@@ -5,7 +5,7 @@ from ark.tools.log import log
 CONFIG_PATH = "config/global_config.yaml"
 
 
-class MySimulatorNode(SimulatorNode):
+class PyBulletNode(SimulatorNode):
 
     def initialize_scene(self):
         pass
@@ -15,4 +15,4 @@ class MySimulatorNode(SimulatorNode):
 
 
 if __name__ == "__main__":
-    main(MySimulatorNode, CONFIG_PATH)
+    main(PyBulletNode, CONFIG_PATH)
