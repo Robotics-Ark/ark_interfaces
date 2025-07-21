@@ -7,52 +7,52 @@ config:
   merge_fixed_links: False
   ee_index: 11
   base_position:
-    - -0.55
-    - 0.0
-    - 0.6
-  base_orientation: # x, y, z, w
-    - 0
-    - 0
-    - 0
-    - 1
+  - -0.55
+  - 0.0
+  - 0.6
+  base_orientation:
+  # x, y, z, w
+  - 0
+  - 0
+  - 0
+  - 1
   use_fixed_base: True
-  initial_configuration: 
-    - 0
-    - -0.785
-    - 0
-    - -2.356
-    - 0
-    - 1.571
-    - 0.785
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-  joint_groups: 
-    arm: 
+  initial_configuration:
+  - 0
+  - -0.785
+  - 0
+  - -2.356
+  - 0
+  - 1.571
+  - 0.785
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  joint_groups:
+    arm:
       control_mode: "position"
-      joints: 
-        - "panda_joint1"
-        - "panda_joint2"
-        - "panda_joint3"
-        - "panda_joint4"
-        - "panda_joint5"
-        - "panda_joint6"
-        - "panda_joint7"
-    gripper: 
+      joints:
+      - "panda_joint1"
+      - "panda_joint2"
+      - "panda_joint3"
+      - "panda_joint4"
+      - "panda_joint5"
+      - "panda_joint6"
+      - "panda_joint7"
+    gripper:
       control_mode: "position"
-      joints: 
-        - "panda_finger_joint1"
-    all: 
+      joints:
+      - "panda_finger_joint1"
+    all:
       control_mode: "position"
-      joints: 
-        - "panda_joint1"
-        - "panda_joint2"
-        - "panda_joint3"
-        - "panda_joint4"
-        - "panda_joint5"
-        - "panda_joint6"
-        - "panda_joint7"
-        - "panda_finger_joint1"
-        
+      joints:
+      - "panda_joint1"
+      - "panda_joint2"
+      - "panda_joint3"
+      - "panda_joint4"
+      - "panda_joint5"
+      - "panda_joint6"
+      - "panda_joint7"
+      - "panda_finger_joint1"

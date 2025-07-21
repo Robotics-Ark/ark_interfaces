@@ -3,9 +3,9 @@ config:
   class_dir: "../../../ark_realsense/intel_realsense" # Directory where the class is located
   type: "Camera"
   camera_type: "attached"
-  frequency: 30        # defaulyt 30
-  width: 256           # default 640
-  height: 256          # default 480
+  frequency: 30 # defaulyt 30
+  width: 256 # default 640
+  height: 256 # default 480
   streams:
     depth:
       enable: True
@@ -18,13 +18,12 @@ config:
       format: "y8"
   sim_config:
     visualize: True
-    fov: 60                                    # default 60
-    near_val: 0.1                              # default 0.1
-    far_val: 100.0                             # default 100.0
+    fov: 60 # default 60
+    near_val: 0.1 # default 0.1
+    far_val: 100.0 # default 100.0
     attach:
       parent_name: "Franka"
       parent_link: "camera_link"
-      offset_translation: [0.0, 0.0, 0.035]     # default [0, 0, 0]
-      offset_rotation: [0.0, 0.0, 0.0]         # euler or quaternions, default [0, 0, 0]
-      rel_camera_target: [0, 1, 0] 
-    
+      offset_translation: [ 0.0, 0.0, 0.035 ] # default [0, 0, 0]
+      offset_rotation: [ 0.0, 0.0, 0.0 ] # euler or quaternions, default [0, 0, 0]
+      rel_camera_target: [ 0, 1, 0 ]
