@@ -27,3 +27,4 @@ config:
       offset_translation: [0.0, 0.0, 0.035]     # default [0, 0, 0]
       offset_rotation: [0.0, 0.0, 0.0]         # euler or quaternions, default [0, 0, 0]
       rel_camera_target: [0, 1, 0] 
+    

@@ -55,3 +55,4 @@ config:
         - "panda_joint6"
         - "panda_joint7"
         - "panda_finger_joint1"
+        
