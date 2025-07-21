@@ -1,7 +1,0 @@
-ps4controller:
-  target: nodes/ps4controller.py
-  display: terminal
-
-gym:
-  target: ps4control_gym_example.py
-  display: terminal
