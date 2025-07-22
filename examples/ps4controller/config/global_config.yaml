@@ -41,7 +41,5 @@ objects:
 - "objects/mug.yaml"
 
 other:
-- name: "Franka_Envroiment"
+- name: "Franka_Environment"
   config:
-
-
