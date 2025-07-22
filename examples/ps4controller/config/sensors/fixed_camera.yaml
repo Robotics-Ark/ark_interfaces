@@ -1,0 +1,30 @@
+name: "camera"
+config:
+  class_dir: "../../../ark_realsense/intel_realsense" # Directory where the class is located
+  type: "Camera"
+  camera_type: "fixed"
+  frequency: 30 # defaulyt 30
+  width: 256 # default 640
+  height: 256 # default 480
+  streams:
+    depth:
+      enable: True
+      format: "z16"
+    color:
+      enable: True
+      format: "bgr8"
+    infrared:
+      enable: True
+      format: "y8"
+  sim_config:
+    visualize: True
+    fov: 60 # default 60
+    near_val: 0.1 # default 0.1
+    far_val: 100.0 # default 100.0
+    fix:
+      camera_target_position: [ 0.15, 0.0, 0.5 ]
+      distance: 0.9
+      yaw: -90
+      pitch: 215.0
+      roll: 0.0
+      up_axis_index: 2

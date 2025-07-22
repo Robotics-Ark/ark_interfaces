@@ -1,0 +1,16 @@
+name: "BluePlate"
+config:
+  source: "urdf"
+  urdf_path: "config/objects/blue_plate/model.urdf"
+  publish_ground_truth: False
+  base_position:
+  - 0.0
+  - 0.2
+  - 0.7
+  base_orientation:
+  # x, y, z, w
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  global_scaling: 1
