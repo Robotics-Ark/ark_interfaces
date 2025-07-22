@@ -208,3 +208,5 @@ __marimo__/
 
 # remove render image
 *.png
+*.pkl
+render/
