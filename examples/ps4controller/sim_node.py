@@ -4,7 +4,6 @@ from ark.tools.log import log
 import os
 from pathlib import Path
 
-print(os.getcwd())
 # Path to the global configuration file used to initialize the simulation environment
 CONFIG_PATH = Path(__file__).parent / "config/global_config.yaml"
 
