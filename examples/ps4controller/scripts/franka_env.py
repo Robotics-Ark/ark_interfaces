@@ -118,15 +118,15 @@ class FrankaEnv(ArkEnv):
         print("Resetting objects in the Franka environment.")
         self.reset_component("Franka")
 
-        self.reset_component(
-            "BluePlate",
-            base_position=[random.uniform(-0.2, -0.15), random.uniform(0.1, 0.2), 0.7],
-        )
-        self.reset_component(
-            "Mug",
-            base_position=[
-                random.uniform(-0.2, -0.15),
-                random.uniform(-0.2, -0.1),
-                0.7,
-            ],
-        )
+        # self.reset_component(
+        #     "BluePlate",
+        #     base_position=[random.uniform(-0.2, -0.15), random.uniform(0.1, 0.2), 0.7],
+        # )
+        # self.reset_component(
+        #     "Mug",
+        #     base_position=[
+        #         random.uniform(-0.2, -0.15),
+        #         random.uniform(-0.2, -0.1),
+        #         0.7,
+        #     ],
+        # )

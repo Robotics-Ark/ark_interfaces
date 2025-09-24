@@ -32,13 +32,13 @@ robots:
 - "robots/franka.yaml"
 
 sensors:
-- "sensors/attached_camera.yaml"
-- "sensors/fixed_camera.yaml"
+# - "sensors/attached_camera.yaml"
+# - "sensors/fixed_camera.yaml"
 
 objects:
-- "objects/table.yaml"
-- "objects/blue_plate.yaml"
-- "objects/mug.yaml"
+# - "objects/table.yaml"
+# - "objects/blue_plate.yaml"
+# - "objects/mug.yaml"
 
 other:
 - name: "Franka_Environment"
