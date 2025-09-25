@@ -50,10 +50,21 @@ class ExpertPolicyPS4(InstanceNode):
             baseOrientation=[0, 0, 0, 1],
             useFixedBase=True,
         )
+        
 
         self.get_joint_limits()
 
-        self.home_position = [0, -0.785, 0, -2.356, 0, 1.571, 0.785, 0, 0, 0, 0, 0]
+        self.home_position = [      
+            - 0.0, # Revolute 1
+            - 1.0, # Revolute 2
+            - 0.0, # Revolute 3
+            - -1.0, # Revolute 4
+            - 0.0, # Revolute 5
+            - 0.0, # Revolute 6
+            - 0.0, # Slider 7
+            - 0.0, # slider 8
+                            ]
+
         self.damping = [10, 10, 10, 10, 10, 10, 10, 0.1, 0.1, 0.1, 0.1, 10]
         self.last_q = self.home_position
 

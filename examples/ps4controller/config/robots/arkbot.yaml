@@ -2,7 +2,7 @@ name: "ArkBot"
 config:
   source: "urdf"
   urdf_path: "ark_bot.urdf"
-  class_dir: " ../../../ark_bot/arkbot"
+  class_dir: "/home/harrywarriner/ARK/ark_bot/arkbot"
   frequency: 240
   base_position: [0, 0, 0]
   base_orientation: [0, 0, 0, 1] # x, y, z, w
