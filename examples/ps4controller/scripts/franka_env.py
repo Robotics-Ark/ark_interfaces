@@ -26,8 +26,6 @@ class FrankaEnv(ArkEnv):
         }
         observation_space = {
             "Franka/joint_states/sim": joint_state_t,
-            "camera/rgbd/sim": rgbd_t,
-            "gripper_camera/rgbd/sim": rgbd_t,
         }
 
         super().__init__(
@@ -66,17 +64,9 @@ class FrankaEnv(ArkEnv):
             dict: Dictionary with parsed joint states and RGB-D data from both fixed and gripper cameras.
         """
         joint_states = unpack.joint_state(observation["Franka/joint_states/sim"])
-        camera_rgb, camera_depth = unpack.rgbd(observation["camera/rgbd/sim"])
-        gripper_camera_rgb, gripper_camera_depth = unpack.rgbd(
-            observation["gripper_camera/rgbd/sim"]
-        )
 
         return {
             "joint_states": joint_states,
-            "camera_rgb": camera_rgb,
-            "camera_depth": camera_depth,
-            "gripper_camera_rgb": gripper_camera_rgb,
-            "gripper_camera_depth": gripper_camera_depth,
         }
 
     def terminated_truncated_info(self, state, action, next_state):

@@ -58,12 +58,6 @@ def main():
         trajectory.append(
             {
                 "joint_states": obs["joint_states"][2],
-                "eef_position": ps4policy.initial_ee_position,
-                "eef_orientation": ps4policy.initial_ee_orientation,
-                "camera_rgb": obs["camera_rgb"],
-                "camera_depth": obs["camera_depth"],
-                "gripper_camera_rgb": obs["gripper_camera_rgb"],
-                "gripper_camera_depth": obs["gripper_camera_depth"],
             }
         )
 
@@ -100,12 +94,6 @@ def main():
                 trajectory.append(
                     {
                         "joint_states": obs["joint_states"][2],
-                        "eef_position": new_ee_position,
-                        "eef_orientation": new_ee_orientation,
-                        "camera_rgb": obs["camera_rgb"],
-                        "camera_depth": obs["camera_depth"],
-                        "gripper_camera_rgb": obs["gripper_camera_rgb"],
-                        "gripper_camera_depth": obs["gripper_camera_depth"],
                     }
                 )
 
