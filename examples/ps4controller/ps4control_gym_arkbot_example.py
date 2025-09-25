@@ -1,6 +1,6 @@
 import os
 import pickle
-from scripts.franka_env import FrankaEnv
+from scripts.arbot_env import ArkbotEnv
 from nodes.ps4policyArkbot import ExpertPolicyPS4
 from pathlib import Path
 
@@ -39,7 +39,7 @@ def main():
         os.makedirs(DATA_SAVE_PATH)
 
     # Initialize the Franka environment
-    env = FrankaEnv(sim=SIM, config=CONFIG_PATH)
+    env = ArkbotEnv(sim=SIM, config=CONFIG_PATH)
 
     # Initialize PS4 controller policy
     ps4policy = ExpertPolicyPS4(node_name="ps4policyArkbot", global_config=CONFIG_PATH)
