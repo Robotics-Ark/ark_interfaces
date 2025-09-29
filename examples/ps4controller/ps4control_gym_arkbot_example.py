@@ -1,6 +1,6 @@
 import os
 import pickle
-from scripts.arbot_env import ArkbotEnv
+from scripts.arkbot_env import ArkbotEnv
 from nodes.ps4policyArkbot import ExpertPolicyPS4
 from pathlib import Path
 
@@ -58,12 +58,6 @@ def main():
         trajectory.append(
             {
                 "joint_states": obs["joint_states"][2],
-                "eef_position": ps4policy.initial_ee_position,
-                "eef_orientation": ps4policy.initial_ee_orientation,
-                "camera_rgb": obs["camera_rgb"],
-                "camera_depth": obs["camera_depth"],
-                "gripper_camera_rgb": obs["gripper_camera_rgb"],
-                "gripper_camera_depth": obs["gripper_camera_depth"],
             }
         )
 
@@ -86,7 +80,8 @@ def main():
             action = new_q[:7] + [gripper_position]  # Format for env.step
 
             # Step the environment
-            obs, _, _, _, _ = env.step(action)
+            print(action, len(action))
+            obs, _, _, _, _ = env.step(action[:7])
 
             # Update joint configuration
             q = obs["joint_states"][2].tolist()
@@ -100,12 +95,6 @@ def main():
                 trajectory.append(
                     {
                         "joint_states": obs["joint_states"][2],
-                        "eef_position": new_ee_position,
-                        "eef_orientation": new_ee_orientation,
-                        "camera_rgb": obs["camera_rgb"],
-                        "camera_depth": obs["camera_depth"],
-                        "gripper_camera_rgb": obs["gripper_camera_rgb"],
-                        "gripper_camera_depth": obs["gripper_camera_depth"],
                     }
                 )
 

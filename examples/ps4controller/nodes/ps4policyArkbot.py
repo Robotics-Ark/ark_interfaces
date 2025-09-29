@@ -62,7 +62,6 @@ class ExpertPolicyPS4(InstanceNode):
             - 0.0, # Revolute 5
             - 0.0, # Revolute 6
             - 0.0, # Slider 7
-            - 0.0, # slider 8
                             ]
 
         self.damping = [10, 10, 10, 10, 10, 10, 10, 0.1, 0.1, 0.1, 0.1, 10]
@@ -171,7 +170,7 @@ class ExpertPolicyPS4(InstanceNode):
         Returns:
             tuple: End-effector position (np.array) and orientation as quaternion (np.array).
         """
-        for joint_index, pos in enumerate(q):
+        for joint_index, pos in enumerate(q[:7]):
             self.client.resetJointState(self.robot_id, joint_index, pos)
 
         link_states = self.client.getLinkState(self.robot_id, EE_IDX)

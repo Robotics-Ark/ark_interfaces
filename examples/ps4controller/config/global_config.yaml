@@ -29,7 +29,7 @@ simulator:
       far_plane: 100.0 # far plane distance
 
 robots:
-- "robots/franka.yaml"
+- "robots/arkbot.yaml"
 
 sensors:
 # - "sensors/attached_camera.yaml"

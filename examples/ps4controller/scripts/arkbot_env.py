@@ -22,12 +22,11 @@ class ArkbotEnv(ArkEnv):
         """
         environment_name = "Arkbot_Enviroment"
         action_space = {
-            "arkbot/joint_group_command/sim": joint_group_command_t,
+            "ArkBot/joint_group_command/sim": joint_group_command_t,
         }
         observation_space = {
-            "arkbot/joint_states/sim": joint_state_t,
-            "camera/rgbd/sim": rgbd_t,
-            "gripper_camera/rgbd/sim": rgbd_t,
+            "ArkBot/joint_states/sim": joint_state_t,
+       
         }
 
         super().__init__(
@@ -49,7 +48,7 @@ class ArkbotEnv(ArkEnv):
             dict: Dictionary containing the packed joint command message.
         """
         return {
-            "arkbot/joint_group_command/sim": pack.joint_group_command(
+            "ArkBot/joint_group_command/sim": pack.joint_group_command(
                 name="all",
                 cmd=action,
             ),
@@ -65,19 +64,11 @@ class ArkbotEnv(ArkEnv):
         Returns:
             dict: Dictionary with parsed joint states and RGB-D data from both fixed and gripper cameras.
         """
-        joint_states = unpack.joint_state(observation["arkbot/joint_states/sim"])
-        camera_rgb, camera_depth = unpack.rgbd(observation["camera/rgbd/sim"])
-        gripper_camera_rgb, gripper_camera_depth = unpack.rgbd(
-            observation["gripper_camera/rgbd/sim"]
-        )
-
+        joint_states = unpack.joint_state(observation["ArkBot/joint_states/sim"])
+        
         return {
             "joint_states": joint_states,
-            "camera_rgb": camera_rgb,
-            "camera_depth": camera_depth,
-            "gripper_camera_rgb": gripper_camera_rgb,
-            "gripper_camera_depth": gripper_camera_depth,
-        }
+              }
 
     def terminated_truncated_info(self, state, action, next_state):
         """
@@ -116,7 +107,7 @@ class ArkbotEnv(ArkEnv):
         This is typically called at the beginning of each episode.
         """
         print("Resetting objects in the Arkbot environment.")
-        self.reset_component("arkbot")
+        # self.reset_component("arkbot")
 
         # self.reset_component(
         #     "BluePlate",
